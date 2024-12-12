@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Train Seat Booking</title>
+    <script>
+        function bookSeats() {
+            let numSeats = document.getElementById('num_seats').value;
+
+            // Send a POST request to book the seats
+            fetch("{% url 'book_seats' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": document.getElementsByName('csrfmiddlewaretoken')[0].value
+                },
+                body: "num_seats=" + numSeats
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Successfully booked seats: ' + data.booked_seats.join(', '));
+                    // Reload the page to show the updated seats
+                    location.reload();
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => console.log('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    <h1>Train Seat Booking System</h1>
+    <form id="bookingForm" onsubmit="event.preventDefault(); bookSeats();">
+        {% csrf_token %}
+        <label for="num_seats">Number of seats:</label>
+        <input type="number" id="num_seats" name="num_seats" min="1" max="7" required>
+        <button type="submit">Book Seats</button>
+    </form>
+
+    <h2>Seat Map</h2>
+    <div>
+        {% for seat in seats %}
+            <span style="{% if seat.status %}color: red;{% else %}color: green;{% endif %}">
+                {{ seat.seat_number }}
+            </span>
+            {% if forloop.counter|divisibleby:7 and not forloop.last %}
+                <br>
+            {% endif %}
+        {% endfor %}
+    </div>
+</body>
+</html>
